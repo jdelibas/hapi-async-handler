@@ -58,3 +58,23 @@ server.route({
   },
 });
 ```
+
+### Passing handler context
+
+You can pass in the context and handler separately, best for when the handler is a class function.
+
+```javascript
+const someClass = new someClass()
+
+server.route({
+  method: 'GET',
+  path: '/',
+  handler: {
+    // The handler is now called with the someClass context
+    async: {
+      handler: someClass.handler,
+      context: someClass
+    },
+  },
+});
+```
