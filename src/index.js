@@ -2,11 +2,12 @@ var assert = require('assert');
 
 exports.register = function(server, options, next) {
   server.handler('async', function(route, options) {
-    var asyncHandler = options;
+    var asyncHandler = options.handler || options;
     assert.equal('function', typeof asyncHandler, 'The async route handler must be a function');
 
     return function(request, reply) {
-      asyncHandler.call(this, request, reply).catch(function(error) {
+      var context = options.context || this;
+      asyncHandler.call(context, request, reply).catch(function(error) {
         if (error instanceof Error) {
           var {name, message, stack} = error;
           request.log(['error', 'uncaught'], {name, message, stack});
