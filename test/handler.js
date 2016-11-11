@@ -91,13 +91,51 @@ describe('hapi-async-handler', function() {
     });
   });
 
-  function registerDefaultAsyncHandler(server, handler) {
+  it('sets `context` to the bound context', function(done) {
+    // Create class
+    class TestClass{
+      constructor(options) {
+        this.options = options
+      }
+
+      async handler(request, reply) {
+        reply(this)
+      }
+    }
+    // Instantiate the class with data
+    const testClass = new TestClass('Some Options')
+    let server = new Hapi.Server();
+    server.connection();
+
+    server.register(require('..'), function(error) {
+      expect(error).not.to.exist();
+
+      registerDefaultAsyncHandler(server, testClass.handler , testClass);
+
+      server.inject('/', function(response) {
+        expect(response.result.options).to.exist();
+        expect(response.result.options).to.equal('Some Options');
+        done();
+      });
+    });
+  });
+
+  function registerDefaultAsyncHandler(server, handler, context) {
+    let handlerOptions = {
+      async: handler
+    }
+    if (context) {
+      handlerOptions = {
+        async: {
+          handler,
+          context
+        }
+      }
+    }
     server.route({
       method: 'GET',
       path: '/',
-      handler: {
-        async: handler,
-      },
+      handler: handlerOptions,
       config: {
         timeout: {
           server: 1000,
